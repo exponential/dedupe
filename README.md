@@ -1,0 +1,2 @@
+# dedupe
+Bash File Deduplicator
