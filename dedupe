@@ -1,0 +1,49 @@
+#!/bin/bash
+
+##########################################################
+#                                                        #
+#  File Deduplicator (dedupe)                            #
+#                                                        #
+#  If you don't know what the purpose of this tool is    #
+#  then you fail. No no no, you fail all of the game.    #
+#                                                        #
+#  By: Marcus White (samdiggly@gmail.com) 2016           #
+#                                                        #
+##########################################################
+
+TEMP=`getopt -o d:a --long dir:all -n 'dedupe' -- "$@"`
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -d|--dir)
+            cd "$2"; echo "Changing directory to $2."; shift 2;;
+        -a|--all)
+            for i in `find -maxdepth 1 -type d -not -ipath "*#*" -not -ipath "*_*" | sort`;
+            do
+                $0 -d "$PWD/$i";
+            done
+            exit 1;;
+        --) shift ; break ;;
+        *) echo "Bad options given." ; exit 1 ;;
+    esac
+done
+
+
+FILES=`find -maxdepth 1 -type f -exec md5sum '{}' \; | sort | uniq --all-repeated=separate -w 33 | cut -c 35- | tail -n +2 | grep -v "^$" | awk 'NR % 2 != 0'`
+
+echo -n "Duplicates found: ";
+echo -n "$FILES" | wc -l || echo 0;
+
+
+if [ -z "$FILES" ]; then
+    exit 1;
+fi
+
+for i in $FILES;
+do
+    echo "$i is a duplicate.";
+    rm -rf "$i"
+done
+
+sync
